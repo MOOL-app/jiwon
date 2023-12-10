@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mool-app
+  labels:
+    app: mool-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mool-app
+  template:
+    metadata:
+      labels:
+        app: mool-app
+    spec:
+      containers:
+        - name: spring-boot-server
+          image: jiwonlee42/spring-boot:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+              name: mool-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mool-app
+  labels:
+    app: mool-app
+spec:
+  ports:
+    -port:80
+  targetPort: 8081
+  selector:
+    app: mool-app
+    tier: mool-app
+  type: LoadBalancer
+
+
+

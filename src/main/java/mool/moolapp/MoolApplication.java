@@ -6,18 +6,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 @SpringBootApplication
+@RestController
 public class MoolApplication {
 
+	@GetMapping("/helloo")
+	public String hello() {
+		return "hello";
+	}
 	public static void main(String[] args) {
 		SpringApplication.run(MoolApplication.class, args);
 	}
 
 }
 
-@RestController
-class HelloController {
-	@GetMapping("/helloo")
-	public String hello() {
-		return "hello";
-	}
-}
