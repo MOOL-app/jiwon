@@ -4,7 +4,7 @@ pipeline {
         PROJECT_ID = 'mool-406305'
         CLUSTER_NAME = 'mool-cluster-k8s'
         LOCATION = 'asia-northeast3-a'
-        CREDENTIALS_ID = 'gke'
+        CREDENTIALS_ID = '614438f5-f656-4ae6-8872-2d0ba0605760'
     }
     stages {
         stage("Checkout code") {
