@@ -5,19 +5,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
+@RestController
 @SpringBootApplication
 public class MoolApplication {
 
+	@GetMapping("/hello")
+	public String hello() {
+		return "hello";
+	}
 	public static void main(String[] args) {
 		SpringApplication.run(MoolApplication.class, args);
 	}
 
 }
 
-@RestController
-class HelloController {
-	@GetMapping("/hello")
-	public String hello() {
-		return "hello";
-	}
-}
