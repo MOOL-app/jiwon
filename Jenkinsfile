@@ -1,7 +1,17 @@
 pipeline {
     agent any
-
+    environment {
+        PROJECT_ID = 'mool-406305'
+        CLUSTER_NAME = 'mool-cluster-k8s'
+        LOCATION = 'asia-northeast3-a'
+        CREDENTIALS_ID = 'gke'
+    }
     stages {
+        stage("Checkout code") {
+            steps {
+                checkout scm
+            }
+        }
         stage('Build Spring Boot Project') {
             steps {
                 script {
@@ -15,7 +25,7 @@ pipeline {
             steps {
                 script {
                     // Docker 이미지 빌드
-                    docker.build("jiwonlee42/spring-boot:1.0", ".")
+                    myapp = docker.build("jiwonlee42/spring-boot:${env.BUILD_ID}", ".")
                 }
             }
         }
@@ -25,9 +35,22 @@ pipeline {
                 script {
                     // Docker 이미지를 Docker Hub로 푸시
                     docker.withRegistry('https://registry.hub.docker.com', 'jiwonlee42') {
-                        docker.image("jiwonlee42/spring-boot:1.0").push()
+                        myapp.push("latest")
+                        myapp.push("${env.BUILD_ID}")
                     }
                 }
+            }
+        }
+
+        stage('Deploy to GKE') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh "sed -i 's/spring-boot:latest/spring-boot:${env.BUILD_ID}/g' deployment.yaml"
+                step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME,
+                location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID,
+                verifyDeployments: true])
             }
         }
 
@@ -44,7 +67,7 @@ pipeline {
             steps {
                 script {
                     // Docker 컨테이너 실행
-                    sh 'docker run -p 8081:8080 -d --name=spring-boot-server jiwonlee42/spring-boot:1.0'
+                    sh 'docker run -p 8081:8080 -d --name=spring-boot-server jiwonlee42/spring-boot:${env.BUILD_ID}'
                 }
             }
         }

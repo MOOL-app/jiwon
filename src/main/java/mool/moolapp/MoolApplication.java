@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @SpringBootApplication
+@RestController
 public class MoolApplication {
 
 	@GetMapping("/helloo")
@@ -18,4 +19,3 @@ public class MoolApplication {
 	}
 
 }
-
