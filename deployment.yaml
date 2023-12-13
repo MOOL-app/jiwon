@@ -19,7 +19,7 @@ spec:
           image: jiwonlee42/spring-boot:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8081
+            - containerPort: 8080
               name: mool-app
 ---
 apiVersion: v1
@@ -30,8 +30,9 @@ metadata:
     app: mool-app
 spec:
   ports:
-    - port: 80
-      targetPort: 8081
+    - protocol: "TCP"
+      port: 8080
+      targetPort: 8080
   selector:
     app: mool-app
     tier: mool-app
