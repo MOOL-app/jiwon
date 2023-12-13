@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     // Docker 이미지 빌드
-                    def dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}", "-f Dockerfile .")
+                    docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}", "-f Dockerfile .")
                 }
             }
         }
@@ -27,9 +27,9 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
+                    // Docker 이미지 푸시
                     docker.withRegistry('https://registry.hub.docker.com', 'jiwonlee42') {
-                        dockerImage.push("latest")
-                        dockerImage.push("${DOCKER_IMAGE_TAG}")
+                        docker.image("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}").push()
                     }
                 }
             }
@@ -41,6 +41,7 @@ pipeline {
             }
             steps {
                 script {
+                    // GKE 배포
                     sh "sed -i 's|${DOCKER_IMAGE_NAME}:latest|${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' deployment.yaml"
                     step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME,
                     location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID,
