@@ -2,4 +2,10 @@
 
 server:
   port: 8080
+  servlet:
+    context-path: /app
 
+
+spring:
+  profiles:
+    active: default # ???? ???? ??
