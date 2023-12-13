@@ -30,7 +30,7 @@ metadata:
     app: mool-app
 spec:
   ports:
-    - port: 8080
+    - port: 80
       targetPort: 8081
   selector:
     app: mool-app
