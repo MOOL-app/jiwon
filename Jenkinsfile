@@ -5,6 +5,8 @@ pipeline {
         CLUSTER_NAME = 'mool-cluster-k8s'
         LOCATION = 'asia-northeast3-a'
         CREDENTIALS_ID = '8745ddc9-1a45-42ec-9b0c-8f9d7050cb7d'
+        DOCKER_IMAGE_TAG = "${env.BUILD_ID}"
+        DOCKER_IMAGE_NAME = "jiwonlee42/spring-boot"
     }
     stages {
         stage("Checkout code") {
@@ -12,31 +14,25 @@ pipeline {
                 checkout scm
             }
         }
+
         stage('Build Spring Boot Project') {
             steps {
                 script {
-                    // Spring Boot 프로젝트 빌드
                     sh './gradlew clean build --warning-mode all'
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build and Push Docker Image') {
             steps {
                 script {
                     // Docker 이미지 빌드
-                    myapp = docker.build("jiwonlee42/spring-boot:${env.BUILD_ID}", ".")
-                }
-            }
-        }
+                    def dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}", ".")
 
-        stage('Push Docker Image') {
-            steps {
-                script {
                     // Docker 이미지를 Docker Hub로 푸시
                     docker.withRegistry('https://registry.hub.docker.com', 'jiwonlee42') {
-                        myapp.push("latest")
-                        myapp.push("${env.BUILD_ID}")
+                        dockerImage.push("latest")
+                        dockerImage.push("${DOCKER_IMAGE_TAG}")
                     }
                 }
             }
@@ -47,18 +43,11 @@ pipeline {
                 branch 'main'
             }
             steps {
-                sh "sed -i 's/spring-boot:latest/spring-boot:${env.BUILD_ID}/g' deployment.yaml"
-                step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME,
-                location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID,
-                verifyDeployments: true])
-            }
-        }
-
-        stage('Stop and Remove Existing Container') {
-            steps {
                 script {
-                    // 기존에 동작 중인 컨테이너 중지 및 삭제
-                    sh 'docker ps -q --filter "name=spring-boot-server" | grep -q . && docker stop spring-boot-server && docker rm spring-boot-server || true'
+                    sh "sed -i 's|${DOCKER_IMAGE_NAME}:latest|${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' deployment.yaml"
+                    step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME,
+                    location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID,
+                    verifyDeployments: true])
                 }
             }
         }
@@ -66,8 +55,7 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    // Docker 컨테이너 실행
-                    sh 'docker run -p 8081:8080 -d --name=spring-boot-server jiwonlee42/spring-boot:${env.BUILD_ID}'
+                    sh 'docker run -p 8081:8080 -d --name=spring-boot-server ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}'
                 }
             }
         }
@@ -75,7 +63,6 @@ pipeline {
         stage('Clean Up Unused Docker Images') {
             steps {
                 script {
-                    // 태그가 겹친 이미지 삭제
                     sh 'docker rmi -f $(docker images -f "dangling=true" -q) || true'
                 }
             }
