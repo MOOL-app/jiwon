@@ -11,6 +11,10 @@ java {
 	sourceCompatibility = '17'
 }
 
+bootJar {
+	archiveFileName = 'moolapp-0.0.1-SNAPSHOT.jar'
+}
+
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
@@ -35,3 +39,4 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
