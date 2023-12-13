@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 public class MoolApplication {
 
-	@RequestMapping("/helloo")
+	@RequestMapping("/hello")
 	String hello() {
 		return "hello";
 	}
