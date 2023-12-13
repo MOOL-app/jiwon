@@ -15,21 +15,18 @@ pipeline {
             }
         }
 
-        stage('Build Spring Boot Project') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    sh './gradlew clean build --warning-mode all'
+                    // Docker 이미지 빌드
+                    def dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}", "-f Dockerfile .")
                 }
             }
         }
 
-        stage('Build and Push Docker Image') {
+        stage('Push Docker Image') {
             steps {
                 script {
-                    // Docker 이미지 빌드
-                    def dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}", ".")
-
-                    // Docker 이미지를 Docker Hub로 푸시
                     docker.withRegistry('https://registry.hub.docker.com', 'jiwonlee42') {
                         dockerImage.push("latest")
                         dockerImage.push("${DOCKER_IMAGE_TAG}")
@@ -48,22 +45,6 @@ pipeline {
                     step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME,
                     location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID,
                     verifyDeployments: true])
-                }
-            }
-        }
-
-        stage('Run Docker Container') {
-            steps {
-                script {
-                    sh 'docker run -p 8081:8080 -d --name=spring-boot-server ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}'
-                }
-            }
-        }
-
-        stage('Clean Up Unused Docker Images') {
-            steps {
-                script {
-                    sh 'docker rmi -f $(docker images -f "dangling=true" -q) || true'
                 }
             }
         }
